@@ -21,5 +21,16 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+        // Create 20 groups
+        $groups = \App\Models\Group::factory(150)->create();
+
+        // Create 1500 members and attach them to random groups
+        \App\Models\Member::factory(1500)->create()->each(function ($member) use ($groups) {
+            // Attach to 1-3 random groups
+            $member->groups()->attach(
+                $groups->random(rand(1, 3))->pluck('id')->toArray()
+            );
+        });
     }
 }
