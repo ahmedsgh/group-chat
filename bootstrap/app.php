@@ -15,7 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Redirect guests based on guard
         $middleware->redirectGuestsTo(function ($request) {
             // If trying to access admin routes, redirect to admin login
-            if ($request->is('admin/*')) {
+            if ($request->is('admin', 'admin/*')) {
                 return route('admin.login');
             }
             // Otherwise redirect to member login
