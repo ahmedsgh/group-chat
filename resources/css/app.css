@@ -1,3 +1,43 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Scrollbar */
+*::-webkit-scrollbar {
+    width: 2px;
+}
+
+@media only screen and (min-width: 640px) {
+    *::-webkit-scrollbar {
+        width: 6px;
+    }
+}
+
+*::-webkit-scrollbar-track {
+    background: unset;
+}
+
+/* Handle */
+*::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+/* Handle on hover */
+*::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.filepond--drop-label {
+    background-color: #F9F5F6;
+}
+
+::-webkit-scrollbar:horizontal {
+    height: 5px;
+    background-color: red;
+}
+
+::-webkit-scrollbar-thumb:horizontal {
+    background: #555;
+
+}
