@@ -103,9 +103,10 @@
                     x-text="Math.floor(countdown / 60) + ':' + String(countdown % 60).padStart(2, '0')"></span>
             </p>
             <div x-show="canResend">
-                <button wire:click="resend" wire:loading.attr="disabled"
+                <button wire:click="resend" wire:loading.attr="disabled" wire:target="resend"
                     class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline font-medium">
-                    Resend verification code
+                    <span wire:loading.remove wire:target="resend">Resend verification code</span>
+                    <span wire:loading wire:target="resend">Sending...</span>
                 </button>
             </div>
         </div>

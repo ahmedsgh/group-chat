@@ -29,7 +29,7 @@
                 @foreach($groups as $group)
                     <div wire:key="group-sidebar-{{ $group->id }}"
                         class="flex items-center px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-l-4 cursor-pointer
-                                {{ $selectedGroupId == $group->id ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : (in_array($group->id, $additionalGroupIds) ? 'border-purple-400 bg-purple-50 dark:bg-purple-900/10' : 'border-transparent') }}">
+                                    {{ $selectedGroupId == $group->id ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : (in_array($group->id, $additionalGroupIds) ? 'border-purple-400 bg-purple-50 dark:bg-purple-900/10' : 'border-transparent') }}">
 
                         <!-- Checkbox for multi-select -->
                         <input type="checkbox" wire:click="toggleAdditionalGroup({{ $group->id }})"
@@ -139,9 +139,9 @@
                         </label>
                         <button type="submit"
                             class="p-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-500/25 disabled:opacity-50"
-                            wire:loading.attr="disabled">
-                            <x-icon name="send" class="w-6 h-6" wire:loading.remove />
-                            <span wire:loading class="block w-6 h-6">...</span>
+                            wire:loading.attr="disabled" wire:target="sendMessage">
+                            <x-icon name="send" class="w-6 h-6" wire:loading.remove wire:target="sendMessage" />
+                            <span wire:loading wire:target="sendMessage" class="block w-6 h-6">...</span>
                         </button>
                     </div>
 

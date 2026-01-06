@@ -123,9 +123,10 @@
                 </a>
                 <button type="submit"
                     class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-colors shadow-lg shadow-indigo-500/25 disabled:opacity-50"
-                    wire:loading.attr="disabled">
-                    <span wire:loading.remove>{{ $isEditing ? 'Update Member' : 'Create Member' }}</span>
-                    <span wire:loading>Saving...</span>
+                    wire:loading.attr="disabled" wire:target="save">
+                    <span wire:loading.remove
+                        wire:target="save">{{ $isEditing ? 'Update Member' : 'Create Member' }}</span>
+                    <span wire:loading wire:target="save">Saving...</span>
                 </button>
             </div>
         </form>
