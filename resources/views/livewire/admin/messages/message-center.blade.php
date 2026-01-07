@@ -19,7 +19,7 @@
                     @if(count($additionalGroupIds) > 0)
                         <button wire:click="clearAdditionalGroups"
                             class="flex-1 px-3 py-1.5 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-                            Clear ({{ count($additionalGroupIds) + 1 }})
+                            Clear ({{ count($additionalGroupIds) + ($selectedGroupId ? 1 : 0) }})
                         </button>
                     @endif
                 </div>
@@ -29,13 +29,20 @@
                 @foreach($groups as $group)
                     <div wire:key="group-sidebar-{{ $group->id }}"
                         class="flex items-center px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-l-4 cursor-pointer
-                                    {{ $selectedGroupId == $group->id ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : (in_array($group->id, $additionalGroupIds) ? 'border-purple-400 bg-purple-50 dark:bg-purple-900/10' : 'border-transparent') }}">
+                                            {{ $selectedGroupId == $group->id ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : (in_array($group->id, $additionalGroupIds) ? 'border-purple-400 bg-purple-50 dark:bg-purple-900/10' : 'border-transparent') }}">
 
                         <!-- Checkbox for multi-select -->
-                        <input type="checkbox" wire:click="toggleAdditionalGroup({{ $group->id }})"
-                            @checked($selectedGroupId == $group->id || in_array($group->id, $additionalGroupIds))
-                            @disabled($selectedGroupId == $group->id)
-                            class="w-4 h-4 text-indigo-600 bg-gray-100 dark:bg-gray-600 border-gray-300 dark:border-gray-500 rounded focus:ring-indigo-500 mr-3">
+                        @if($selectedGroupId != $group->id)
+                            <input type="checkbox"
+                                wire:key="cb-{{ $group->id }}-{{ in_array($group->id, $additionalGroupIds) ? 'ch' : 'unch' }}"
+                                wire:click="toggleAdditionalGroup({{ $group->id }})" @checked(in_array($group->id, $additionalGroupIds))
+                                class="w-4 h-4 text-indigo-600 bg-gray-100 dark:bg-gray-600 border-gray-300 dark:border-gray-500 rounded focus:ring-indigo-500 mr-3 transition-colors cursor-pointer">
+                        @else
+                            <!-- Placeholder for selected item alignment -->
+                            <div class="w-4 h-4 mr-3 flex-shrink-0 flex items-center justify-center">
+                                <div class="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                            </div>
+                        @endif
 
                         <div wire:click="selectGroup({{ $group->id }})" class="flex items-center flex-1 min-w-0">
                             <div
@@ -54,6 +61,13 @@
 
         <!-- Messages Area -->
         <div class="flex-1 flex flex-col">
+            {{-- Debug Info --}}
+            <div
+                class="bg-yellow-100 dark:bg-yellow-900/30 p-2 text-xs font-mono text-yellow-800 dark:text-yellow-200 border-b border-yellow-200 dark:border-yellow-800">
+                <strong>DEBUG state:</strong>
+                <span class="ml-2">Selected: [{{ $selectedGroupId }}]</span>
+                <span class="ml-4">Additional: [{{ implode(', ', $additionalGroupIds) }}]</span>
+            </div>
             @if($selectedGroup)
                 <!-- Chat Header -->
                 <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">

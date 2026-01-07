@@ -23,7 +23,6 @@ class MessageCenter extends Component
     #[Url]
     public ?int $selectedGroupId = null;
 
-    #[Url(as: 'additionalGroupIds')]
     public string $additionalGroupIdsString = '';
 
     public string $groupSearch = '';
@@ -39,7 +38,7 @@ class MessageCenter extends Component
         // Initialize from URL if present
     }
 
-    public function getAdditionalGroupIdsProperty(): array
+    protected function parseAdditionalIds(): array
     {
         if (empty($this->additionalGroupIdsString)) {
             return [];
@@ -47,11 +46,16 @@ class MessageCenter extends Component
         return array_filter(array_map('intval', explode(',', $this->additionalGroupIdsString)));
     }
 
+    public function getAdditionalGroupIdsProperty(): array
+    {
+        return $this->parseAdditionalIds();
+    }
+
     public function selectGroup(int $groupId): void
     {
         $this->selectedGroupId = $groupId;
         // Remove from additional if it was there
-        $additional = $this->additionalGroupIds;
+        $additional = $this->parseAdditionalIds();
         $additional = array_diff($additional, [$groupId]);
         $this->additionalGroupIdsString = implode(',', $additional);
     }
@@ -62,7 +66,7 @@ class MessageCenter extends Component
             return;
         }
 
-        $additional = $this->additionalGroupIds;
+        $additional = $this->parseAdditionalIds();
         if (in_array($groupId, $additional)) {
             $additional = array_diff($additional, [$groupId]);
         } else {
@@ -73,12 +77,7 @@ class MessageCenter extends Component
 
     public function selectAllGroups(): void
     {
-        if (!$this->selectedGroupId) {
-            $firstGroup = Group::first();
-            if ($firstGroup) {
-                $this->selectedGroupId = $firstGroup->id;
-            }
-        }
+
 
         $allGroupIds = Group::pluck('id')->toArray();
         $additional = array_diff($allGroupIds, [$this->selectedGroupId]);
