@@ -85,16 +85,43 @@ class MessageCenter extends Component
 
     public function selectAllGroups(): void
     {
+        $groupsQuery = Group::query();
 
+        // If search is active, only select filtered groups
+        if ($this->groupSearch) {
+            $groupsQuery->where('name', 'like', "%{$this->groupSearch}%");
+        }
 
-        $allGroupIds = Group::pluck('id')->toArray();
-        $additional = array_diff($allGroupIds, [$this->selectedGroupId]);
-        $this->additionalGroupIdsString = implode(',', $additional);
+        $filteredGroupIds = $groupsQuery->pluck('id')->toArray();
+
+        // Current additional groups
+        $currentAdditional = $this->parseAdditionalIds();
+
+        // Add filtered groups (except selectedGroupId) to current additional groups
+        $groupsToAdd = array_diff($filteredGroupIds, [$this->selectedGroupId]);
+        $newAdditional = array_unique(array_merge($currentAdditional, $groupsToAdd));
+
+        $this->additionalGroupIdsString = implode(',', $newAdditional);
     }
 
     public function clearAdditionalGroups(): void
     {
-        $this->additionalGroupIdsString = '';
+        // If search is active, only clear groups that match the search
+        if ($this->groupSearch) {
+            $filteredGroupIds = Group::where('name', 'like', "%{$this->groupSearch}%")
+                ->pluck('id')
+                ->toArray();
+
+            $currentAdditional = $this->parseAdditionalIds();
+
+            // Remove only the filtered groups from additional
+            $newAdditional = array_diff($currentAdditional, $filteredGroupIds);
+
+            $this->additionalGroupIdsString = implode(',', $newAdditional);
+        } else {
+            // No search, clear all additional groups
+            $this->additionalGroupIdsString = '';
+        }
     }
 
     public function sendMessage(): void

@@ -10,17 +10,36 @@
                 <div class="relative">
                     <x-icon name="search" class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input type="text" wire:model.live.debounce.300ms="groupSearch" placeholder="Search groups..."
-                        class="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-700 border-0 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500">
+                        class="w-full pl-10 pr-10 py-2 bg-gray-50 dark:bg-gray-700 border-0 rounded-xl text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500">
+                    @if($groupSearch)
+                        <button type="button" wire:click="$set('groupSearch', '')"
+                            class="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-500 text-gray-600 dark:text-gray-200 hover:bg-gray-400 dark:hover:bg-gray-400 transition-colors">
+                            <x-icon name="close" class="w-3 h-3" />
+                        </button>
+                    @endif
                 </div>
                 <div class="flex gap-2">
+                    @php
+                        // Calculate how many groups in the current view (search results) are selected
+                        $groupIdsInView = $groups->pluck('id')->toArray();
+                        $selectedInView = array_filter($groupIdsInView, fn($id) => in_array($id, $additionalGroupIds) || $id == $selectedGroupId);
+                        $additionalInView = array_filter($groupIdsInView, fn($id) => in_array($id, $additionalGroupIds));
+                        // Total selected count (selectedGroupId + additionalGroupIds)
+                        $totalSelectedCount = ($selectedGroupId ? 1 : 0) + count($additionalGroupIds);
+                        $totalGroupsCount = \App\Models\Group::count();
+                    @endphp
                     <button wire:click="selectAllGroups"
                         class="flex-1 px-3 py-1.5 text-xs font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-lg hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors">
-                        Select All
+                        Select All{{ $groupSearch ? ' (' . count($groups) . ')' : '' }}
                     </button>
-                    @if(count($additionalGroupIds) > 0)
+                    @if($groupSearch ? count($additionalInView) > 0 : count($additionalGroupIds) > 0)
                         <button wire:click="clearAdditionalGroups"
                             class="flex-1 px-3 py-1.5 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-                            Clear ({{ count($additionalGroupIds) + ($selectedGroupId ? 1 : 0) }})
+                            @if($groupSearch)
+                                Clear ({{ count($additionalInView) + (in_array($selectedGroupId, $groupIdsInView) ? 1 : 0) }})
+                            @else
+                                Clear ({{ count($additionalGroupIds) + ($selectedGroupId ? 1 : 0) }})
+                            @endif
                         </button>
                     @endif
                 </div>
@@ -30,7 +49,7 @@
                 @foreach($groups as $group)
                     <div wire:key="group-sidebar-{{ $group->id }}"
                         class="flex items-center px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-l-4 cursor-pointer
-                                            {{ $selectedGroupId == $group->id ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : (in_array($group->id, $additionalGroupIds) ? 'border-purple-400 bg-purple-50 dark:bg-purple-900/10' : 'border-transparent') }}">
+                                                {{ $selectedGroupId == $group->id ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : (in_array($group->id, $additionalGroupIds) ? 'border-purple-400 bg-purple-50 dark:bg-purple-900/10' : 'border-transparent') }}">
 
                         <!-- Checkbox for multi-select -->
                         @if($selectedGroupId != $group->id)
@@ -58,17 +77,34 @@
                     </div>
                 @endforeach
             </div>
+
+            {{-- Selection Counter - Bottom Bar --}}
+            @if($totalSelectedCount > 0)
+                <div class="flex-shrink-0 px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-lg bg-indigo-600 dark:bg-indigo-500 flex items-center justify-center">
+                                <span class="text-sm font-bold text-white">{{ $totalSelectedCount }}</span>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $totalSelectedCount == 1 ? 'Group' : 'Groups' }} Selected</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">of {{ $totalGroupsCount }} total</p>
+                            </div>
+                        </div>
+                        @if($groupSearch && count($selectedInView) > 0)
+                            <div class="text-right">
+                                <p class="text-sm font-semibold text-purple-600 dark:text-purple-400">{{ count($selectedInView) }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">in view</p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
         </div>
 
         <!-- Messages Area -->
         <div class="flex-1 flex flex-col">
-            {{-- Debug Info --}}
-            <div
-                class="bg-yellow-100 dark:bg-yellow-900/30 p-2 text-xs font-mono text-yellow-800 dark:text-yellow-200 border-b border-yellow-200 dark:border-yellow-800">
-                <strong>DEBUG state:</strong>
-                <span class="ml-2">Selected: [{{ $selectedGroupId }}]</span>
-                <span class="ml-4">Additional: [{{ implode(', ', $additionalGroupIds) }}]</span>
-            </div>
+
             @if($selectedGroup)
                 <!-- Chat Header -->
                 <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
