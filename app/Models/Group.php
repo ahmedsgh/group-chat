@@ -28,8 +28,7 @@ class Group extends Model
     public function messages(): BelongsToMany
     {
         return $this->belongsToMany(Message::class, 'message_group')
-            ->withTimestamps()
-            ->orderBy('messages.created_at', 'desc');
+            ->withTimestamps();
     }
 
     /**

@@ -23,8 +23,8 @@
     </style>
 </head>
 
-<body class="antialiased bg-gray-50 dark:bg-gray-900">
-    <div class="min-h-screen flex" x-data="{ sidebarOpen: false }">
+<body class="antialiased bg-gray-50 dark:bg-gray-900 {{ isset($fullHeight) && $fullHeight ? 'overflow-hidden' : '' }}">
+    <div class="{{ isset($fullHeight) && $fullHeight ? 'h-screen' : 'min-h-screen' }} flex" x-data="{ sidebarOpen: false }">
 
         <!-- Mobile sidebar backdrop -->
         <div x-show="sidebarOpen" x-transition:enter="transition-opacity ease-linear duration-300"
@@ -108,7 +108,7 @@
         </aside>
 
         <!-- Main content -->
-        <div class="flex-1 flex flex-col min-w-0">
+        <div class="flex-1 flex flex-col min-w-0 {{ isset($fullHeight) && $fullHeight ? 'h-screen overflow-hidden' : '' }}">
             <!-- Top header -->
             <header
                 class="sticky top-0 z-30 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-700">
@@ -130,9 +130,15 @@
             </header>
 
             <!-- Page content -->
-            <main class="flex-1 p-4 sm:p-6 lg:p-8">
-                {{ $slot }}
-            </main>
+            @if(isset($fullHeight) && $fullHeight)
+                <main class="flex-1 flex flex-col min-h-0">
+                    {{ $slot }}
+                </main>
+            @else
+                <main class="flex-1 p-4 sm:p-6 lg:p-8">
+                    {{ $slot }}
+                </main>
+            @endif
         </div>
     </div>
 

@@ -1,8 +1,9 @@
-<div>
+<div class="flex-1 flex flex-col min-h-0">
     <x-slot name="header">Messages</x-slot>
+    <x-slot name="fullHeight">true</x-slot>
 
     <div
-        class="flex h-[calc(100vh-12rem)] bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        class="flex flex-1 min-h-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 overflow-hidden">
         <!-- Groups Sidebar -->
         <div class="w-80 flex-shrink-0 border-r border-gray-100 dark:border-gray-700 flex flex-col">
             <div class="p-4 border-b border-gray-100 dark:border-gray-700 space-y-3">
@@ -91,7 +92,8 @@
                 </div>
 
                 <!-- Messages -->
-                <div class="flex-1 overflow-y-auto p-4 space-y-4" id="messagesContainer" wire:poll.30s>
+                <div class="flex-1 overflow-y-auto p-4 min-h-0 flex flex-col-reverse gap-4" id="messagesContainer"
+                    wire:poll.30s>
                     @foreach($messages as $message)
                         <div wire:key="message-{{ $message->id }}" class="flex justify-end">
                             <div class="max-w-lg">
@@ -123,52 +125,86 @@
                             </div>
                         </div>
                     @endforeach
+
+                    @if($hasMoreMessages)
+                        <div class="flex justify-center py-2">
+                            <button wire:click="loadMoreMessages" wire:loading.attr="disabled" wire:target="loadMoreMessages"
+                                class="px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 rounded-lg transition-colors disabled:opacity-50">
+                                <span wire:loading.remove wire:target="loadMoreMessages">
+                                    Load More ({{ $totalMessagesCount - $messagesLimit }} older)
+                                </span>
+                                <span wire:loading wire:target="loadMoreMessages">
+                                    Loading...
+                                </span>
+                            </button>
+                        </div>
+                    @endif
                 </div>
 
                 <!-- Message Input -->
-                <form wire:submit="sendMessage" class="p-4 border-t border-gray-100 dark:border-gray-700">
+                <form wire:submit="sendMessage"
+                    class="flex-shrink-0 px-4 py-3 border-t border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800">
                     @if(session('success'))
-                        <div class="mb-3 text-sm text-emerald-600 dark:text-emerald-400">
+                        <div class="mb-2 text-sm text-emerald-600 dark:text-emerald-400">
                             {{ session('success') }}
                         </div>
                     @endif
                     @if(session('error'))
-                        <div class="mb-3 text-sm text-red-600 dark:text-red-400">
+                        <div class="mb-2 text-sm text-red-600 dark:text-red-400">
                             {{ session('error') }}
                         </div>
                     @endif
 
-                    <div class="flex items-end space-x-3">
-                        <div class="flex-1">
-                            <textarea wire:model="messageContent" rows="2" placeholder="Type your message..."
-                                class="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border-0 rounded-xl text-gray-900 dark:text-white resize-none focus:ring-2 focus:ring-indigo-500 @error('messageContent') ring-2 ring-red-500 @enderror"></textarea>
-                            @error('messageContent')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        <label class="p-3 text-gray-400 hover:text-gray-600 cursor-pointer">
-                            <input type="file" wire:model="attachments" multiple class="hidden"
-                                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx">
-                            <x-icon name="attachment" class="w-6 h-6" />
-                        </label>
-                        <button type="submit"
-                            class="p-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-500/25 disabled:opacity-50"
-                            wire:loading.attr="disabled" wire:target="sendMessage">
-                            <x-icon name="send" class="w-6 h-6" wire:loading.remove wire:target="sendMessage" />
-                            <span wire:loading wire:target="sendMessage" class="block w-6 h-6">...</span>
-                        </button>
-                    </div>
-
                     @if(count($attachments) > 0)
-                        <div class="mt-2 flex flex-wrap gap-2">
+                        <div class="mb-2 flex flex-wrap gap-2">
                             @foreach($attachments as $index => $file)
                                 <span
-                                    class="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-lg text-xs text-gray-600 dark:text-gray-400">
-                                    {{ $file->getClientOriginalName() }}
+                                    class="inline-flex items-center px-2 py-1 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg text-xs text-indigo-600 dark:text-indigo-400">
+                                    <x-icon name="document" class="w-3 h-3 mr-1" />
+                                    {{ Str::limit($file->getClientOriginalName(), 20) }}
                                 </span>
                             @endforeach
                         </div>
                     @endif
+
+                    <div class="flex items-center gap-2">
+                        <!-- Attachment Button -->
+                        <label
+                            class="flex-shrink-0 w-10 h-10 flex items-center justify-center text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full cursor-pointer transition-colors">
+                            <input type="file" wire:model="attachments" multiple class="hidden"
+                                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx">
+                            <x-icon name="attachment" class="w-5 h-5" />
+                        </label>
+
+                        <!-- Text Input -->
+                        <div class="flex-1 relative">
+                            <textarea wire:model="messageContent" rows="1" placeholder="Type a message..."
+                                class="w-full px-4 py-2.5 bg-gray-100 dark:bg-gray-700 border-0 rounded-2xl text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-gray-600 transition-colors @error('messageContent') ring-2 ring-red-500 @enderror"
+                                style="field-sizing: content; min-height: 42px; max-height: 150px;"></textarea>
+                            @error('messageContent')
+                                <p class="absolute -bottom-5 left-0 text-xs text-red-500">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <!-- Send Button -->
+                        <button type="submit"
+                            class="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            wire:loading.attr="disabled" wire:target="sendMessage">
+                            <svg wire:loading.remove wire:target="sendMessage" xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                                <path
+                                    d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
+                            </svg>
+                            <svg wire:loading wire:target="sendMessage" class="w-5 h-5 animate-spin"
+                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                                </circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                </path>
+                            </svg>
+                        </button>
+                    </div>
                 </form>
             @else
                 <!-- No Group Selected -->

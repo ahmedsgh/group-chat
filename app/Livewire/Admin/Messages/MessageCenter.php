@@ -33,6 +33,8 @@ class MessageCenter extends Component
     public ?int $readsMessageId = null;
     public array $messageReads = [];
 
+    public int $messagesLimit = 10;
+
     public function mount(): void
     {
         // Initialize from URL if present
@@ -54,10 +56,16 @@ class MessageCenter extends Component
     public function selectGroup(int $groupId): void
     {
         $this->selectedGroupId = $groupId;
+        $this->messagesLimit = 10; // Reset pagination when switching groups
         // Remove from additional if it was there
         $additional = $this->parseAdditionalIds();
         $additional = array_diff($additional, [$groupId]);
         $this->additionalGroupIdsString = implode(',', $additional);
+    }
+
+    public function loadMoreMessages(): void
+    {
+        $this->messagesLimit += 10;
     }
 
     public function toggleAdditionalGroup(int $groupId): void
@@ -195,13 +203,19 @@ class MessageCenter extends Component
 
         $selectedGroup = null;
         $messages = collect();
+        $hasMoreMessages = false;
+        $totalMessagesCount = 0;
 
         if ($this->selectedGroupId) {
             $selectedGroup = Group::with('members')->find($this->selectedGroupId);
             if ($selectedGroup) {
+                $totalMessagesCount = $selectedGroup->messages()->count();
+                $hasMoreMessages = $totalMessagesCount > $this->messagesLimit;
+
                 $messages = $selectedGroup->messages()
                     ->with(['user', 'attachments', 'reads.member'])
-                    ->orderBy('created_at', 'asc')
+                    ->orderBy('created_at', 'desc')
+                    ->take($this->messagesLimit)
                     ->get();
             }
         }
@@ -211,6 +225,8 @@ class MessageCenter extends Component
             'selectedGroup' => $selectedGroup,
             'messages' => $messages,
             'additionalGroupIds' => $this->additionalGroupIds,
+            'hasMoreMessages' => $hasMoreMessages,
+            'totalMessagesCount' => $totalMessagesCount,
         ]);
     }
 }
