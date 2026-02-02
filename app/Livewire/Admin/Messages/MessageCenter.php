@@ -28,6 +28,17 @@ class MessageCenter extends Component
     public string $groupSearch = '';
     public string $messageContent = '';
     public array $attachments = [];
+    public $newAttachments = [];
+
+    public function updatedNewAttachments()
+    {
+        $this->validate([
+            'newAttachments.*' => 'file|max:10240',
+        ]);
+
+        $this->attachments = array_merge($this->attachments, is_array($this->newAttachments) ? $this->newAttachments : [$this->newAttachments]);
+        $this->newAttachments = [];
+    }
 
     public bool $showReadsModal = false;
     public ?int $readsMessageId = null;
@@ -127,7 +138,7 @@ class MessageCenter extends Component
     public function sendMessage(): void
     {
         $this->validate([
-            'messageContent' => 'required|string|min:1',
+            'messageContent' => 'required_without:attachments|nullable|string',
             'attachments.*' => 'nullable|file|max:10240',
         ]);
 
@@ -141,7 +152,7 @@ class MessageCenter extends Component
 
         $message = Message::create([
             'user_id' => auth()->id(),
-            'content' => $this->messageContent,
+            'content' => $this->messageContent ?: null,
         ]);
 
         $message->groups()->attach($groupIds);
@@ -158,7 +169,15 @@ class MessageCenter extends Component
 
         $this->messageContent = '';
         $this->attachments = [];
-        session()->flash('success', 'Message sent successfully.');
+    }
+
+    public function removeAttachment(int $index): void
+    {
+        if (isset($this->attachments[$index])) {
+            unset($this->attachments[$index]);
+            // Re-index the array to keep Livewire happy
+            $this->attachments = array_values($this->attachments);
+        }
     }
 
     protected function handleAttachment(Message $message, $file): void
